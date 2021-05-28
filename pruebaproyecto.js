@@ -26,13 +26,14 @@ accionesRespuesta[0] = "La cabina telefónica se encuentra al final del segundo 
     accionesRespuesta[20] = '.s',
     accionesRespuesta[21] = '.q',
     accionesRespuesta[22] = '.g',
-    accionesRespuesta[23] = 'la petición es errónea, porfavor revisa la ortografia ', //defailt xD
+    accionesRespuesta[23] = 'la petición es errónea, porfavor revisa la ortografia ', //default xD
 
 console.log( "Hola, ¿Cuál es tu duda?" );
 console.log("Hello, what is your question?" ); 
 console.log(" Bonjour, quel est votre doute?");
 
 var pregunta = prompt("===>");
+// nota: agregar una condicion con los idiomas soportados 
 
 
 //Función principal que hara la petición a la detección de idiomas
@@ -52,10 +53,11 @@ function deteccion( texto, callback ){
 
 }
 
-// esta duncion tedectara las palabras clave de lo se ingrese en la terminal :) 
-function analisis (idioma, texto){
 
 
+
+function traduccion(idioma, texto) {
+    
     var bodyAnalisis = {
 
         "documents" : [
@@ -63,12 +65,9 @@ function analisis (idioma, texto){
             "id" : "1",
             "language" :idioma
             , "text" : texto
-            }
-            
+            }           
         ]
-    
     }
-    
     var direccionAnalisis = 'https://servicioanalisistexto.cognitiveservices.azure.com/text/analytics/v3.0/entities/recognition/general'
     axios.post( direccionAnalisis, bodyAnalisis, {
       headers : {
@@ -77,57 +76,49 @@ function analisis (idioma, texto){
     
       }
 
-    }).then( respuesta => {/*aun no sabes que poner aqui para que sirva :( pero ya comprobamos que sirva con un console*/(respuesta.data.documents[0].entities[0].text )})
-    .catch( error => {"error en la funcion analisis :"+console.log(error.response.data)});
-
-}
+    }).then( respuesta => {var analiText =(respuesta.data.documents[0].entities[0].text )
 
 
+         var datosAdaptacion = [{ "Text": analiText }]
+         var direccionAdaptacion = 'https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=es';
 
-function traduccion(idioma, texto) {
+                axios.post(direccionAdaptacion, datosAdaptacion, {
+                                headers: {
+                  'Ocp-Apim-Subscription-Key': '58f9f4075c9c46bca61a78cfc71a45b6',
+                 'Ocp-Apim-Subscription-Region': 'southcentralus',
+                   'Content-Type': 'application/json'
+                                         }
 
-    // adaptacion al sistema ; ) 
+                            })
+                            .then(respuesta => {
+                                var adap1 = (respuesta.data[0].translations[0].text)
 
-    var datosAdaptacion = [{ "Text": texto }]
-    var direccionAdaptacion = 'https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=es';
+                                switch (adap1) {
 
-    axios.post(direccionAdaptacion, datosAdaptacion, {
-            headers: {
-                'Ocp-Apim-Subscription-Key': '58f9f4075c9c46bca61a78cfc71a45b6',
-                'Ocp-Apim-Subscription-Region': 'southcentralus',
-                'Content-Type': 'application/json'
-            }
-
-        })
-        .then(respuesta => {
-            var adap1 = (respuesta.data[0].translations[0].text)
-
-            switch (adap1) {
-
-                case "teléfono" :
-                    var respuestaIdioma = [{ "Text": accionesRespuesta[0] }];
-                    break;
-                case "comedor":
-                    var respuestaIdioma = [{ "Text": accionesRespuesta[1] }];
-                    break;
-                case "Comedor":
-                     var respuestaIdioma = [{ "Text": accionesRespuesta[1] }];
-                        break;    
-                case "transporte":
-                    var respuestaIdioma = [{ "Text": accionesRespuesta[15] }];
-                    break;
-                case "Primero":
-                    var respuestaIdioma = [{ "Text": accionesRespuesta[2] }];
-                case "primero":
-                        var respuestaIdioma = [{ "Text": accionesRespuesta[2] }];    
-                    break;
-                case "transporte":
-                    var respuestaIdioma = [{ "Text": accionesRespuesta[12] }]
-                    break;
-                default:
-                    var respuestaIdioma = [{ "Text": accionesRespuesta[23] }];
-                    break;
-            }
+                                    case "teléfono" :
+                                        var respuestaIdioma = [{ "Text": accionesRespuesta[0] }];
+                                        break;
+                                    case "comedor":
+                                        var respuestaIdioma = [{ "Text": accionesRespuesta[1] }];
+                                        break;
+                                    case "Comedor":
+                                        var respuestaIdioma = [{ "Text": accionesRespuesta[1] }];
+                                            break;    
+                                    case "transporte":
+                                        var respuestaIdioma = [{ "Text": accionesRespuesta[15] }];
+                                        break;
+                                    case "Primero":
+                                        var respuestaIdioma = [{ "Text": accionesRespuesta[2] }];
+                                    case "primero":
+                                            var respuestaIdioma = [{ "Text": accionesRespuesta[2] }];    
+                                        break;
+                                    case "transporte":
+                                        var respuestaIdioma = [{ "Text": accionesRespuesta[12] }]
+                                        break;
+                                    default:
+                                        var respuestaIdioma = [{ "Text": accionesRespuesta[23] }];
+                                        break;
+                                }
 
            //traduccion para el usuario xD
 
@@ -150,10 +141,9 @@ function traduccion(idioma, texto) {
 
         })
         .catch(error => console.log("INTENTA RESOLVIENDO EL " + error));
-
+    })
+    .catch( error => {"error en la funcion analisis :"+console.log(error.response.data)});
     }
 
                     
-//deteccion(pregunta,analisis);
-  //deteccion(pregunta, analisis)            
- deteccion(pregunta, traduccion);
+deteccion(pregunta, traduccion);    
