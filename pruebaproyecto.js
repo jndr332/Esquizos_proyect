@@ -1,9 +1,11 @@
 
+// llamada a la libreria axios para peticiones y a prompt para poder ingresar valores desde la terminal 
 const axios = require( 'axios' );
 const prompt = require( 'prompt-sync' )();
 
+//acciones respuesta asignadas para las respuestas predeterminadas 
 const accionesRespuesta = []
-accionesRespuesta[0] = "La cabina telefónica se encuentra al final del segundo pabellón.   ",
+    accionesRespuesta[0] = "La cabina telefónica se encuentra al final del segundo pabellón.   ",
     accionesRespuesta[1] = "El comedor se encuentra junto a las canchas de color rojo.",
     accionesRespuesta[2] = 'El primero de inicial se encuentra al fondo a la derecha de la entrada principal',
     accionesRespuesta[3] = "Un taxi ira a tu ubicacion en parde minutos, porfavor espere...",
@@ -26,18 +28,18 @@ accionesRespuesta[0] = "La cabina telefónica se encuentra al final del segundo 
     accionesRespuesta[20] = '.s',
     accionesRespuesta[21] = '.q',
     accionesRespuesta[22] = '.g',
-    accionesRespuesta[23] = 'la petición es errónea, porfavor revisa la ortografia ', //default xD
-
-console.log( "Hola, ¿Cuál es tu duda?" );
-console.log("Hello, what is your question?" ); 
-console.log(" Bonjour, quel est votre doute?");
-
+    accionesRespuesta[23] = 'la petición es errónea, porfavor revisa la ortografia', //default xD
+    
+//Saludos 
+console.log("Hola bienvenido a la unidad educativa Francisco Febres Cordero, ¿Cómo puedo ayudarte?");
+console.log("Hello, welcome to the Francisco Febres Cordero educational unit, how can I help you?"); 
+console.log("(ɔ◔‿◔)ɔ ♥");
+//( ˘︹˘ )
 var pregunta = prompt("===>");
-// nota: agregar una condicion con los idiomas soportados 
-
+ 
 
 //Función principal que hara la petición a la detección de idiomas
-function deteccion( texto, callback ){
+function deteccion( texto, callback){
     var datosDeteccion = [{ "Text": texto }];
     var direccionDeteccion = 'https://api.cognitive.microsofttranslator.com/detect?api-version=3.0';
     axios.post( direccionDeteccion, datosDeteccion, {
@@ -47,38 +49,34 @@ function deteccion( texto, callback ){
             'Content-Type' : 'application/json'  
         }
     })
-    .then( respuesta => { callback( respuesta.data[0].language, texto ) } )
+    .then( respuesta => {callback( respuesta.data[0].language, texto ) } )
     .catch( error => console.log( "error en la funcion DETECCION : "+error ));
-
-
 }
 
 
+function traduccion( idioma, texto) {
+//obtencion de la palabra clave  (Servicio de Key_phrases) 
 
-
-function traduccion(idioma, texto) {
-    
+// cuerpo de la peticion
     var bodyAnalisis = {
-
         "documents" : [
             {
-            "id" : "1",
-            "language" :idioma
-            , "text" : texto
-            }           
+                "language" : idioma,
+                "id" : "1",
+                "text" : texto
+            }          
         ]
     }
-    var direccionAnalisis = 'https://servicioanalisistexto.cognitiveservices.azure.com/text/analytics/v3.0/entities/recognition/general'
+    var direccionAnalisis = 'https://servicioanalisistexto.cognitiveservices.azure.com/text/analytics/v3.0/KeyPhrases'
     axios.post( direccionAnalisis, bodyAnalisis, {
       headers : {
         "Content-type": "application/json"
         , "Ocp-Apim-Subscription-Key": "8b4c7829af844bc699425c01e131246a"
-    
-      }
-
-    }).then( respuesta => {var analiText =(respuesta.data.documents[0].entities[0].text )
-
-
+                }
+      //obtencion del la palabra clave
+    }).then( respuesta => {var analiText =(respuesta.data.documents[0].keyPhrases[0] )
+        
+      //adaptacion del texto ingresado
          var datosAdaptacion = [{ "Text": analiText }]
          var direccionAdaptacion = 'https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=es';
 
@@ -115,13 +113,14 @@ function traduccion(idioma, texto) {
                                     case "transporte":
                                         var respuestaIdioma = [{ "Text": accionesRespuesta[12] }]
                                         break;
+                                    case "taxi":
+                                        var respuestaIdioma = [{"Text": accionesRespuesta}]    
                                     default:
                                         var respuestaIdioma = [{ "Text": accionesRespuesta[23] }];
                                         break;
                                 }
 
-           //traduccion para el usuario xD
-
+           //la respuesta del switch sera traducida aqui dependiendo del idioma que haya sido detectado 
             var direccionTraduccion = 'https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to=' + idioma;
 
             axios.post(direccionTraduccion, respuestaIdioma, {
@@ -132,18 +131,20 @@ function traduccion(idioma, texto) {
                     'Content-Type': 'application/json'
                 }
             })
-
             .then(respuesta => console.log(respuesta.data[0].translations[0].text))
-
-            .catch(error => console.log(error));
-
-
+            .catch(error => console.log("Error en TraducUsua"+error));
 
         })
         .catch(error => console.log("INTENTA RESOLVIENDO EL " + error));
-    })
+    })//cierre de la funcion flecha
     .catch( error => {"error en la funcion analisis :"+console.log(error.response.data)});
     }
 
                     
-deteccion(pregunta, traduccion);    
+deteccion(pregunta,traduccion)
+
+/* 
+
+cambio de servicio de entidades a phrases_key :) 
+
+*/
